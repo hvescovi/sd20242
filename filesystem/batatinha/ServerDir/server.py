@@ -9,29 +9,7 @@ from file import *
 import random
 
 SERVER_DIR = "./files/"
-
-
-print(File.get_or_none())
-
-# class File:
-#     # construtor com valor padrão nos parâmetros
-#     def __init__(self, name="", id="", modified=""):
-#         self.name = name
-#         self.id = id
-#         self.modified = modified
-
-#     # expressar a classe em formato texto
-#     def __str__(self):
-#         return f'{self.name}, '+\
-#                f'{self.id}, {self.modified}'
-
-#     # expressar a classe em formato json
-#     def json(self):
-#         return {
-#             "name" : self.name,
-#             "id" : self.id,
-#             "modified" : self.modified 
-#         }
+File.create_table('file')
 
 # acesso ao flask via variável app
 app = Flask(__name__)
@@ -61,9 +39,7 @@ with app.app_context():
             # percorre a lista de entradas
             for entry in dirEntrys:
                 # obtem status referente ao arquivo e grava na lista
-                fileStatus = entry.stat()
-                file = File(entry.name, fileStatus.st_ino, fileStatus.st_mtime)
-                print(file)
+                file = File.get(File.id == entry.name)
                 lista.append(file)
 
 
@@ -131,13 +107,21 @@ with app.app_context():
     @app.route("/escrever", methods=['POST'])
     def escrever():
         try:
-            f = request.files['files']
-            # print(f.filename)
-            f.save(SERVER_DIR + f.filename)
-            resposta = jsonify({"header": "OK", "detail": "success!"})
+            requestContent = request.json
+            fileName = requestContent.get('fileName')
+            fileContent = requestContent.get('fileContent')
+            
+            print(fileName)
+            file = File.get(File.name == fileName)
+            openedFile = open(SERVER_DIR + str(file.id), "w")
+            conteudo = openedFile.write(fileContent)
+            openedFile.close()
+            
+            # f.save(SERVER_DIR + f.filename)
+            resposta = jsonify({"header": "OK", "detail": "success!", "content": conteudo})
         
         except Exception as e:
-            resposta = jsonify({"header": "erro", "detail": str(e)})
+            resposta = jsonify({"header": "erro", "detail": str(e), "content": "Deu erro irmãozao"})
         
         return resposta
 
