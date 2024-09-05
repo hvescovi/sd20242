@@ -4,7 +4,7 @@ import json
 import os
 import time
 
-SERVER_ADDR = "http://191.52.6.123:5000"
+SERVER_ADDR = ["http://191.52.7.73:5000", "http://191.52.6.245:5000"]
 FILE_DIR = "./ClientDir/files"
 
 class File:
@@ -39,14 +39,14 @@ class Client:
         self.operation_list = []
 
     def list_server_files(self, verbose=False):
-        response = requests.get(f'{self.server_addr}/listar').json()
-        #print(response)
-        
-        if verbose:
-            for n in response['files']:
-                print(n['name'])
-
-        return response['files']
+        for addr in self.server_addr:
+            response = requests.get(f'{addr}/listar').json()
+            if verbose:
+                for n in response['files']:
+                    print(n['name'])
+            print(response)
+            if response:
+                return response['files']
 
     def list_local_files(self, verbose=False):
         files = []
@@ -69,14 +69,20 @@ class Client:
         return json_files
 
     def create_file(self, file_name):
-        response = requests.get(f'{self.server_addr}/criar/{file_name}').json()
+        erro = False
+        for addr in self.server_addr:
+            response = requests.get(f'{addr}/criar/{file_name}').json()
+            if response['header'] == "OK":
+                f = open(f"{self.file_dir}/{file_name}", "w")
+                f.close()
+            else:
+                erro = True
 
-        if response['header'] == "OK":
-            f = open(f"{self.file_dir}/{file_name}", "w")
-            f.close()
+        if not erro:
             return True
-
+        
         return False
+
 
     def delete_file(self, file_name):
         response = requests.get(f'{self.server_addr}/deletar/{file_name}').json()
@@ -88,19 +94,21 @@ class Client:
         return False
 
     def write_to_file(self, file_name, content):
-        response = requests.get(f'{self.server_addr}/escrever/{file_name}/{content}').json()
+        for addr in self.server_addr:
+            response = requests.get(f'{addr}/escrever/{file_name}/{content}').json()
+            
+            if response['header'] == "OK":
+                f = open(f"{self.file_dir}/{file_name}", "w")
+                f.write(content)
+                f.close()
         
-        if response['header'] == "OK":
-            f = open(f"{self.file_dir}/{file_name}", "w")
-            f.write(content)
-            f.close()
-            return True
-    
-        return False
+        return True
     
     def upload(self, file_name):
-        files = {'files': open(f'{self.file_dir}/{file_name}', 'rb')}
-        response = requests.post(f'{self.server_addr}/escrever', files=files).json()
+        for addr in self.server_addr:
+
+            files = {'files': open(f'{self.file_dir}/{file_name}', 'rb')}
+            response = requests.post(f'{addr}/escrever', files=files).json()
 
         return response['header'] == "OK"
 

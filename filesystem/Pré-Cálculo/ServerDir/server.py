@@ -6,6 +6,9 @@ import os
 import json
 import uuid
 SERVER_DIR = "./files/"
+import sys
+porta = sys.argv[1]
+
 
 class File:
     # construtor com valor padrão nos parâmetros
@@ -47,6 +50,8 @@ with app.app_context():
     @app.route("/listar")
     def listar():
         try:
+            print('oi')
+
             # cria a lista de retorno que sera usadada para gerar o json
             lista_retorno = []
             # obtem lista dos arquivos do diretŕio atual
@@ -133,16 +138,16 @@ with app.app_context():
     @app.route("/escrever", methods=['POST'])
     def escrever():
         try:
-            # f = request.files['files']
-            print(request.data)
-            # f.save(SERVER_DIR + f.filename)
-            resposta = jsonify({"header": "OK", "detail": json.dumps(request.data, indent=4)})
+            f = request.files['files']
+            print(f.filename)
+            f.save(SERVER_DIR + f.filename)
+            resposta = jsonify({"header": "OK", "detail": "success!"})
         
         except Exception as e:
-            print(e)
             resposta = jsonify({"header": "erro", "detail": str(e)})
         
         return resposta
+
 
     @app.route("/ler/<file_name>")
     def ler(file_name):
@@ -162,7 +167,7 @@ with app.app_context():
             resposta = jsonify({"header": "erro", "detail": str(e)})
         return resposta
 
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0', port = porta)
     # para depurar a aplicação web no VSCode, é preciso remover debug=True
     # https://stackoverflow.com/questions/17309889/how-to-debug-a-flask-app
 
