@@ -111,12 +111,11 @@ with app.app_context():
             fileName = requestContent.get('fileName')
             fileContent = requestContent.get('fileContent')
             
-            print(fileName)
             file = File.get(File.name == fileName)
             openedFile = open(SERVER_DIR + str(file.id), "w")
             conteudo = openedFile.write(fileContent)
             openedFile.close()
-            
+                
             # f.save(SERVER_DIR + f.filename)
             resposta = jsonify({"header": "OK", "detail": "success!", "content": conteudo})
         
