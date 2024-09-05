@@ -4,7 +4,8 @@ import json
 import os
 import time
 
-SERVER_ADDR = "http://191.52.7.84:5000"
+# para adicionar múltiplos servers, faz uma lista de server e depois fazer fors e chamar cada um
+SERVER_ADDR = "http://191.52.6.42:5000"
 FILE_DIR = "./files"
 
 class File:
@@ -31,7 +32,6 @@ class Client:
 
     def __init__(self, server_addr=SERVER_ADDR, file_dir=FILE_DIR):
         self.server_addr = server_addr
-        self.list_server_addr = ["http://191.52.7.84:5000", "http://191.52.7.85:5000"]
         self.file_dir = file_dir
         self.client_prev_list = None
         self.client_cur_list = None
@@ -70,18 +70,15 @@ class Client:
         return json_files
 
     def create_file(self, file_name):
-        try:
-            for server_address in self.list_server_addr:
-                response = requests.get(f'{server_address}/criar/{file_name}').json()
+        response = requests.get(f'{self.server_addr}/criar/{file_name}').json()
 
-                if response['header'] == "OK":
-                    f = open(f"{self.file_dir}/{file_name}", "w")
-                    f.close()
-
+        if response['header'] == "OK":
+            f = open(f"{self.file_dir}/{file_name}", "w")
+            f.close()
             return True
-        except:
-            return False
-            
+
+        return False
+
     def delete_file(self, file_name):
         response = requests.get(f'{self.server_addr}/deletar/{file_name}').json()
         
@@ -188,106 +185,102 @@ def test():
 # install - load all files from server
 # merge - compare files between client and server, and do the actions required to make them equals
 
-# def run():
-    # client = Client()
-    # # Repita:
-    # while True:
-        
-    #     # Se não existir lista local:
-    #     if client.client_prev_list == None:
-            
-    #         # Pegar lista do servidor
-    #         client.server_prev_list = client.list_server_files()
-            
-    #         # Para cada item da lista:
-    #         for file in client.server_prev_list:
-    #             # Solicitar arquivo para o servidor e criar no local
-    #             f = open(f"{client.file_dir}/{file['name']}", "w")
-    #             content = client.read_from_file(file['name'])
-    #             f.write(content)
-    #             f.close()
-            
-    #         # Salvar lista local 
-    #         client.client_prev_list = client.server_prev_list
-    
-    #     # Inicias sincronismo entre local e remoto:
-    #     else:
-    #         # Obter as listas atuais - local e servidor
-    #         client.client_cur_list = client.list_local_files()
-    #         client.server_cur_list = client.list_server_files()
-
-    #         # CASO 1- Novo arquivo no local
-    #         # percorre a lista local atual
-    #         for cur_file in client.client_cur_list:
-    #             # Supor que o arquivo não existe
-    #             exists = False
-    #             # procurar arquivo atual na lista anterior
-    #             for prev_file in client.client_prev_list:
-    #                 # se o elemento não existe na anteiror
-    #                 if prev_file['name'] == cur_file['name']:
-    #                     # encontrou o arquivo, sinalizar e interromper busca
-    #                     exists = True
-    #                     break
-
-    #             # Se o arquivo não existe
-    #             if not exists:
-    #                 # ler conteudo do arquivo
-    #                 #openedFile = open("./files/" + cur_file['name'], "r")
-    #                 #conteudo = openedFile.read()
-    #                 # adiciona na lista de execução (add_server, name_arquivo)
-    #                 client.operation_list.append(('add_server',cur_file['name']))
-
-    # # -- -- # CASO 2- Novo arquivo no servidor
-    # # -- -- percorre a lista do servidor atual
-    # # -- -- -- se o elemento não existe na anteiror
-    # # -- -- -- -- adiciona na lista de execução (add_local, name_arquivo)
-    # #
-
-    # # -- -- # CASO 3 - arquivo removido no local
-    # # -- -- percorre a lista do local anterior
-    # # -- -- -- se o elemento não existe na atual
-    # # -- -- -- -- adiciona na lista de execução (remove_server, name_arquivo)
-
-    # # -- -- # CASO 4 - arquivo removido no servidor
-    # # -- -- percorre a lista do servidor anterior
-    # # -- -- -- se o elemento não existe na atual
-    # # -- -- -- -- adiciona na lista de execução (remove_local, name_arquivo)
-
-    # # -- -- Executar ações na lista
-    #         for operation in client.operation_list:
-    #             if(operation[0] == 'add_server'):
-    #                 # cria arquivo no servidor
-    #                 #client.create_file(operation[1])
-    #                 #client.write_to_file(operation[1], operation[2])
-    #                 client.upload(operation[1])
-    #                 print(f"Novo arquivo local enviado para o servidor - {operation[1]}")
-                
-    #             elif(operation[0] == 'add_local'):
-    #                 # cria arquivo local
-    #                 newFile = open("./files/" + operation[1], "x")
-    #                 newFile.write(operation[2])
-    #                 newFile.close()
-                
-    #             elif(operation[0] == 'remove_server'):
-    #                 # remove arquivo do servidor
-    #                 client.remove_file(operation[1])
-                
-    #             elif(operation[0] == 'remove_local'):
-    #                 # remove arquivo local
-    #                 os.remove("./files/" + operation[1])
-    # # -- -- limpa lista de operações
-    #         client.operation_list = []
-            
-                    
-    # # -- -- Listas atuais agora são as anteriores
-    #         client.client_prev_list = client.client_cur_list
-    #         client.server_prev_list = client.server_cur_list 
-
-    #         time.sleep(5) 
-
 def run():
     client = Client()
-    client.create_file("Teste")
+    # Repita:
+    while True:
+        
+        # Se não existir lista local:
+        if client.client_prev_list == None:
+            
+            # Pegar lista do servidor
+            client.server_prev_list = client.list_server_files()
+            
+            # Para cada item da lista:
+            for file in client.server_prev_list:
+                # Solicitar arquivo para o servidor e criar no local
+                f = open(f"{client.file_dir}/{file['name']}", "w")
+                content = client.read_from_file(file['name'])
+                f.write(content)
+                f.close()
+            
+            # Salvar lista local 
+            client.client_prev_list = client.server_prev_list
+    
+        # Inicias sincronismo entre local e remoto:
+        else:
+            # Obter as listas atuais - local e servidor
+            client.client_cur_list = client.list_local_files()
+            client.server_cur_list = client.list_server_files()
+
+            # CASO 1- Novo arquivo no local
+            # percorre a lista local atual
+            for cur_file in client.client_cur_list:
+                # Supor que o arquivo não existe
+                exists = False
+                # procurar arquivo atual na lista anterior
+                for prev_file in client.client_prev_list:
+                    # se o elemento não existe na anteiror
+                    if prev_file['name'] == cur_file['name']:
+                        # encontrou o arquivo, sinalizar e interromper busca
+                        exists = True
+                        break
+
+                # Se o arquivo não existe
+                if not exists:
+                    # ler conteudo do arquivo
+                    #openedFile = open("./files/" + cur_file['name'], "r")
+                    #conteudo = openedFile.read()
+                    # adiciona na lista de execução (add_server, name_arquivo)
+                    client.operation_list.append(('add_server',cur_file['name']))
+
+    # -- -- # CASO 2- Novo arquivo no servidor
+    # -- -- percorre a lista do servidor atual
+    # -- -- -- se o elemento não existe na anteiror
+    # -- -- -- -- adiciona na lista de execução (add_local, name_arquivo)
+    #
+
+    # -- -- # CASO 3 - arquivo removido no local
+    # -- -- percorre a lista do local anterior
+    # -- -- -- se o elemento não existe na atual
+    # -- -- -- -- adiciona na lista de execução (remove_server, name_arquivo)
+
+    # -- -- # CASO 4 - arquivo removido no servidor
+    # -- -- percorre a lista do servidor anterior
+    # -- -- -- se o elemento não existe na atual
+    # -- -- -- -- adiciona na lista de execução (remove_local, name_arquivo)
+
+    # -- -- Executar ações na lista
+            for operation in client.operation_list:
+                if(operation[0] == 'add_server'):
+                    # cria arquivo no servidor
+                    #client.create_file(operation[1])
+                    #client.write_to_file(operation[1], operation[2])
+                    client.upload(operation[1])
+                    print(f"Novo arquivo local enviado para o servidor - {operation[1]}")
+                
+                elif(operation[0] == 'add_local'):
+                    # cria arquivo local
+                    newFile = open("./files/" + operation[1], "x")
+                    newFile.write(operation[2])
+                    newFile.close()
+                
+                elif(operation[0] == 'remove_server'):
+                    # remove arquivo do servidor
+                    client.remove_file(operation[1])
+                
+                elif(operation[0] == 'remove_local'):
+                    # remove arquivo local
+                    os.remove("./files/" + operation[1])
+    # -- -- limpa lista de operações
+            client.operation_list = []
+            
+                    
+    # -- -- Listas atuais agora são as anteriores
+            client.client_prev_list = client.client_cur_list
+            client.server_prev_list = client.server_cur_list 
+
+            time.sleep(5) 
 
 if __name__ == "__main__":
     #test()
