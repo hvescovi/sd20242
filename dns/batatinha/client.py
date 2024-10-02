@@ -20,13 +20,24 @@ sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
 
 while True:
     try:
-        message = input("File: ")
+        message = input("Search content: ")
+        isFilename = ''
+        while isFilename != 's' and isFilename != 'n':
+            isFilename = input("Procurar por file name? [s/n]: ").lower()
+
         # Send data to the multicast group
         #print (sys.stderr, 'sending "%s"' % message)
         #print ('sending "%s"' % message)
         
-        data = '{"fileName": "' +  message + '"}'
-        sent = sock.sendto(data.encode(), multicast_group)
+        # data = '{"fileName": "' +  message + '"}'
+        data =  {
+            "content": message,
+            "isFileName": isFilename
+        }
+
+        jsonData = json.dumps(data)
+        print(type(jsonData.encode()))
+        sent = sock.sendto(jsonData.encode(), multicast_group)
 
         # Look for responses from all recipients
         while True:
