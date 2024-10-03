@@ -8,7 +8,7 @@ server.py -> Roda o servidor da aplicação. Contém a lógica para procurar o n
   <img src="https://github.com/user-attachments/assets/df6e9b57-4095-4a15-8517-258078bd9d12">
 </p>
 
-client.py -> Roda um cliente para a aplicação. Espera que o usuário digite um nome de arquivo para ser procurado ou atributos para serem procurado dentro dos arquivos. Na próxima imagem, vemos o resultado da procura pelo arquivo zumba:
+client.py -> Roda um cliente para a aplicação. Espera que o usuário digite um nome de arquivo para ser procurado (adicionando `fileName` antes) ou atributos para serem procurados dentro dos arquivos (adicionando `search` antes). Na próxima imagem, vemos o resultado da procura pelo arquivo zumba:
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/1cd03997-d2ff-4c3e-a866-c70aa34230e3">
