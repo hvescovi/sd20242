@@ -25,40 +25,49 @@ group = socket.inet_aton(multicast_group)
 mreq = struct.pack('4sL', group, socket.INADDR_ANY)
 sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
-# Receive/respond loop
+def searchByFileName(sock, address, SERVER_DIR, responseContent):
+    if(os.path.exists(SERVER_DIR + responseContent)):
+        openedFile = open(SERVER_DIR + responseContent, "r")
+        contentFileName = openedFile.read()
+        contentFileName = contentFileName[:-1]
+        contentFileName = contentFileName.replace('"', '')
+        openedFile.close()
+        response = '{"header": "OK", "detail": "' + contentFileName + '"}'
+        print(f"Respondendo o cliente {address} - enviando: {response}")
+        sock.sendto(response.encode() , address)
+    else: 
+        print('Não encontrou, fazendo nada...')
+
+def searchByFileContent(SERVER_DIR, responseContent):
+    resultados = []
+    for root, dirs, files in os.walk(SERVER_DIR):
+        for fileName in files:
+            filePath = os.path.join(root, fileName)
+            file = open(filePath, 'r', encoding='utf-8')
+            fileContent = file.read()
+            if responseContent in fileContent:
+                resultados.append(filePath)
+            file.close()
+    
+    return resultados
+
 while True:
-    # print(sys.stderr, '\nwaiting to receive message')
     print('\nwaiting to receive message')
     data, address = sock.recvfrom(1024)
     
-    #print(sys.stderr, 'received %s bytes from %s' % (len(data), address))
     print('received %s bytes from %s: %s' % (len(data), address, data.decode('utf-8')))
 
     parsed_data = json.loads(data.decode('utf-8')) 
 
-    # Verificar se o arquivo existe no diretório de arquivos do servidor
     for SERVER_DIR in SERVER_DIRS: 
-        if(os.path.exists(SERVER_DIR + parsed_data['fileName'])):
-            # abrir arquivo
-            openedFile = open(SERVER_DIR + parsed_data['fileName'], "r")
-            # ler o conteudo
-            conteudo = openedFile.read()
-            # remove o \n
-            conteudo = conteudo[:-1]
-            # remove as " devido a incompatibilidade com json
-            conteudo = conteudo.replace('"', '')
-            openedFile.close()
-            # Preparar resposta
-            resposta = '{"header": "OK", "detail": "' + conteudo + '"}'
-            # enviar o coteudo
-            print(f"Respondendo o cliente {address} - enviando: {resposta}")
-            sock.sendto(resposta.encode() , address)
-    
-        # se nao abrir
-        else:
-            # nada
-            print('Não encontrou, fazendo nada...')
-    
-    #print(sys.stderr, 'sending acknowledgement to', address)
-    #print('sending acknowledgement to', address)
-    #sock.sendto('ack'.encode(), address)
+        responseContent =  parsed_data['content']
+        
+        if not responseContent:
+            continue 
+        
+        isFileName = parsed_data['isFileName'] == 's'
+        
+        if isFileName: 
+            searchByFileName(sock, address, SERVER_DIR, responseContent)
+        else: 
+            print(searchByFileContent(SERVER_DIR, responseContent))
