@@ -17,8 +17,8 @@ class Node:
     def run(self):
         HashTable.create_table()
         
-        client = Client("224.3.29.50", 5000, 'bla1/')
-        server = Server("224.3.29.50", 5000, 'bla2/')
+        client = Client("224.3.29.50", 1234, 'bla1/')
+        server = Server("224.3.29.50", 1234, 'bla2/')
 
         event = Event()
         
