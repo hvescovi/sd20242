@@ -60,6 +60,9 @@ class Server:
                 hash = HashTable.get(HashTable.id == guid)
                 self.returnContent(hash.id)
                 
+            elif 'sync' in parsed_data:
+                self.syncDatabase()
+                
                 
     def returnContent(self, id):
         path = self.server_dir + str(id)
@@ -89,15 +92,16 @@ class Server:
     def putContent(self, guid, dados):
         file = HashTable.create(id=guid, name=dados)
         file.save()
+
+        print ("Novo arquivo criado, GUID: ", guid)
         
-        path = self.server_dir + str(guid)
+    def syncDatabase(self):
+        database = HashTable.get()
         
-        openedFile = open(path, "w")
-        openedFile.write(dados)
-        openedFile.close()
+        resposta = '{"header": "OK", "detail": "' + database + '"}'
         
-        self.returnContent(guid)
-        
+        print(f"Syncing...")
+        self.sock.sendto(resposta.encode() , self.address)
         
                 
         

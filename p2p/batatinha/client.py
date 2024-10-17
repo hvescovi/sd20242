@@ -23,7 +23,7 @@ class Client:
         self.multicast_group = (addr_group, port)
         self.client_dir = client_dir
         self.sock = None
-
+        
     def run(self) -> None:
         
         if not os.path.exists(self.client_dir):
@@ -40,6 +40,8 @@ class Client:
         # local network segment.
         ttl = struct.pack('b', 1)
         self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
+    
+        self.sync()
 
         opcao = None
         while opcao != "0":
@@ -51,6 +53,7 @@ class Client:
             elif opcao == "2":
                 guid = input("--> GUID: ")
                 dados = input("--> Dados: ")
+                self.createFile(guid, dados)
                 self.putData(guid, dados)
             elif opcao == "3":
                 guid = input("--> GUID: ")
@@ -94,11 +97,38 @@ class Client:
                     file.write(parsed_data['detail'])
                 
                 # Recebeu, mas tenta receber respostas de outros nós que possuem o arquivo
-                while True:
-                    print('*** jogando fora')
-                    try:
-                        data, server = self.sock.recvfrom(1024)
+                # while True:
+                #     print('*** jogando fora')
+                #     try:
+                #         data, server = self.sock.recvfrom(1024)
 
-                    except socket.timeout:
-                        print('*** timed out, no more responses')
-                        break
+                #     except socket.timeout:
+                #         print('*** timed out, no more responses')
+                #         break
+                    
+                    
+    def createFile(self, guid, dados):
+        path = self.client_dir + str(guid)
+        
+        openedFile = open(path, "w")
+        openedFile.write(dados)
+        openedFile.close()
+        
+    def sync(self):
+        data = '{"sync": "' +  "all" + '"}'
+        sent = self.sock.sendto(data.encode(), self.multicast_group)
+        
+        while True:
+            print('--> waiting to receive')
+            try:
+                data, server = self.sock.recvfrom(1024)
+
+            except socket.timeout:
+                print('--> timed out, no more responses :(')
+                break
+            else:
+                parsed_data = json.loads(data.decode()) 
+                print(f'--> received from {server}: {parsed_data}')
+                
+                with open(os.path.join(self.client_dir, "content"), 'w') as file:
+                    file.write(parsed_data['detail'])
