@@ -3,6 +3,8 @@ import struct
 import json
 import os
 from threading import Event
+from hashTable import *
+
 
 def clear_buffer(sock):
     while True:
@@ -25,10 +27,10 @@ class Client:
         self.sock = None
 
     def run(self) -> None:
-        
+
         if not os.path.exists(self.client_dir):
             os.mkdir(self.client_dir)
-        
+
         # Create the datagram socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -41,9 +43,12 @@ class Client:
         ttl = struct.pack('b', 1)
         self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
 
+        self.sync()
+
         opcao = None
         while opcao != "0":
-            opcao = input("Insira o que tu quer: \n 1 = get(name), 2 = put(GUID, dados), 3 = get(GUID) ou 0 para sair.")
+            opcao = input(
+                "Insira o que tu quer: \n 1 = get(name), 2 = put(GUID, dados), 3 = get(GUID) ou 0 para sair.")
 
             if opcao == "1":
                 message = input("--> File: ")
@@ -51,32 +56,32 @@ class Client:
             elif opcao == "2":
                 guid = input("--> GUID: ")
                 dados = input("--> Dados: ")
+                self.createFile(guid, dados)
                 self.putData(guid, dados)
             elif opcao == "3":
                 guid = input("--> GUID: ")
                 self.getByGuid(guid)
 
     def getByName(self, message):
-        data = '{"fileName": "' +  message + '"}'
+        data = '{"fileName": "' + message + '"}'
         sent = self.sock.sendto(data.encode(), self.multicast_group)
         self.printResult(message)
-        
 
     def getByGuid(self, guid):
-        data = '{"guid": "' +  guid + '"}'
+        data = '{"guid": "' + guid + '"}'
         sent = self.sock.sendto(data.encode(), self.multicast_group)
         self.printResult(guid)
 
     def putData(self, guid, dados):
         data = {
-            "guid" : guid,
+            "guid": guid,
             "dados": dados
         }
-        
+
         data = json.dumps(data)
-        
+
         sent = self.sock.sendto(data.encode(), self.multicast_group)
-        
+
     def printResult(self, content):
         while True:
             print('--> waiting to receive')
@@ -87,18 +92,48 @@ class Client:
                 print('--> timed out, no more responses :(')
                 break
             else:
-                parsed_data = json.loads(data.decode()) 
+                parsed_data = json.loads(data.decode())
                 print(f'--> received from {server}: {parsed_data}')
-                
+
                 with open(os.path.join(self.client_dir, content), 'w') as file:
                     file.write(parsed_data['detail'])
-                
-                # Recebeu, mas tenta receber respostas de outros nós que possuem o arquivo
-                while True:
-                    print('*** jogando fora')
-                    try:
-                        data, server = self.sock.recvfrom(1024)
 
-                    except socket.timeout:
-                        print('*** timed out, no more responses')
-                        break
+                # Recebeu, mas tenta receber respostas de outros nós que possuem o arquivo
+                # while True:
+                #     print('*** jogando fora')
+                #     try:
+                #         data, server = self.sock.recvfrom(1024)
+
+                #     except socket.timeout:
+                #         print('*** timed out, no more responses')
+                #         break
+
+    def createFile(self, guid, dados):
+        path = self.client_dir + str(guid)
+
+        openedFile = open(path, "w")
+        openedFile.write(dados)
+        openedFile.close()
+
+    def sync(self):
+        data = '{"sync": "' + "all" + '"}'
+        sent = self.sock.sendto(data.encode(), self.multicast_group)
+
+        while True:
+            print('--> waiting to receive')
+            try:
+                data, server = self.sock.recvfrom(1024)
+
+            except socket.timeout:
+                print('--> timed out, no more responses :(')
+                break
+            else:
+                parsedData = json.loads(data.decode())
+                content = parsedData['detail']
+
+                print(f'--> received from {server}: {parsedData}')
+
+                for c in content:
+                    if (not HashTable.get_or_none(c['id'])):
+                        HashTable.create(
+                            id=c['id'], name=c['name'], modified=c['modified'])
