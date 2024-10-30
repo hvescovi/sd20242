@@ -102,7 +102,7 @@ class Client:
                                 file.write(file_data)
                             print(f"Arquivo {file_name} baixado e salvo como {file_path}")
 
-                        break
+                    break
 
             else:
                 print("Opção inválida. Tente novamente.")
