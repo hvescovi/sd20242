@@ -15,7 +15,14 @@ P2 ESPERA 6 SEGUNDOS E ENVIA UM EVENTO PARA P1
 
 # Previsão
 
+ORDEM DOS EVENTOS
 
+P1 1
+P1 2
+P2 3
+P2 4
+P1 5
+P1 5
 
 ![Previsao](desenho.png)
 
