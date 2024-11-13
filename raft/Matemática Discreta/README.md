@@ -8,6 +8,14 @@ Corrigir o erro do codigo(substituir isAlive por is_alive na linha 205 do node.p
 
 ![erro](erro.png)
 
+# Printar HeartBeat
+
+Na linha 146 do node.py:
+
+```Python
+time.sleep((cfg.HB_TIME - delta) / 1000)
+print(".", end="", flush=True)
+```
 # Executando
 
 ## Nodes
